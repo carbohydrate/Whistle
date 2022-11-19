@@ -4,6 +4,7 @@
 ## Author: Caleb, vitamin
 ## Version: @project-version@
 ## SavedVariables: WhistleDB
+## X-Curse-Project-ID: 706628
 
 #@no-lib-strip@
 Libs\LibStub\LibStub.lua
