@@ -105,6 +105,7 @@ end
 
 if WGLDB then
     local popupFrame = CreateFrame("Frame", "WhistleMenu", UIParent, "UIDropDownMenuTemplate")
+    --https://wowpedia.fandom.com/wiki/UI_Object_UIDropDownMenu#The_info_table
     local menu = {}
 
     local function menuSorter(a, b)
@@ -146,7 +147,7 @@ if WGLDB then
                 end
             end
         end
-        table.sort(menu, menuSorter)
+        --table.sort(menu, menuSorter)
         menu[#menu + 1] = {
             text = L["Show/Hide minimap"],
             func = function()
@@ -159,6 +160,11 @@ if WGLDB then
                 end
             end
         }
+        --set selected pet
+        local pet_number = Whistle.db.char.pet_number
+        if pet_number then
+            menu[pet_number].checked = true
+        end
     end
 
     function WGLDB.OnClick(self, button)
