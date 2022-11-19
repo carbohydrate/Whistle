@@ -94,8 +94,8 @@ function Whistle:UpdateLDB(pet_number)
         WGLDB.icon, WGLDB.text = defaultIcon,L["Pet Slot"].." "..pet_number
     end
     Whistle.db.char.pet_number = pet_number
-    WhistleFrame:SetAttribute( "type1", "macro" )
-    WhistleFrame:SetAttribute( "macrotext1", "/cast [nopet] "..(L["Call Pet %d"]):format(pet_number))
+    WhistleFrame:SetAttribute("type", "macro")
+    WhistleFrame:SetAttribute("macrotext", "/cast [nopet] "..(L["Call Pet %d"]):format(pet_number))
     SetPetSlot(pet_number,pet_number)
 end
 
@@ -175,4 +175,5 @@ Whistle:RegisterEvent("ADDON_LOADED")
 Whistle:RegisterEvent("PLAYER_LOGIN")
 Whistle:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
-local secureframe = CreateFrame("Button", "WhistleFrame", UIParent, "SecureActionButtonTemplate")
+local WhistleFrame = CreateFrame("Button", "WhistleFrame", UIParent, "SecureActionButtonTemplate")
+WhistleFrame:RegisterForClicks("AnyUp", "AnyDown")

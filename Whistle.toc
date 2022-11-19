@@ -1,4 +1,4 @@
-## Interface: 40200
+## Interface: 100000
 ## Title: Whistle
 ## Notes: Hunter pet manager for any DataBroker(LDB) display.
 ## Author: Caleb
