@@ -1,0 +1,3 @@
+﻿<Bindings>
+    <Binding name="CLICK WhistleFrame:LeftButton" header="WHISTLE"/>
+</Bindings>
