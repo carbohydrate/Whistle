@@ -1,9 +1,10 @@
-## Interface: 100007
+## Interface: 100100
 ## Title: Whistle
 ## Notes: Hunter pet manager for any DataBroker(LDB) display.
 ## Author: Caleb, vitamin
 ## Version: @project-version@
 ## SavedVariables: WhistleDB
+## IconTexture: 132161
 ## X-Curse-Project-ID: 706628
 
 #@no-lib-strip@
