@@ -9,7 +9,7 @@ local ldb = LibStub:GetLibrary("LibDataBroker-1.1", true)
 local icon = LibStub("LibDBIcon-1.0", true)
 local defaultIcon = "Interface\\Icons\\Ability_Hunter_BeastTaming"
 local pName = UnitName("player")
-local GetStablePetInfo = GetStablePetInfo
+local GetStablePetInfo = C_StableInfo.GetStablePetInfo
 
 local call_pet = {
     [1] = 883, -- Call Pet 1
@@ -18,6 +18,24 @@ local call_pet = {
     [4] = 83244, -- Call Pet 4
     [5] = 83245, -- Call Pet 5
 }
+
+local function EasyMenu_Initialize( frame, level, menuList )
+    for index = 1, #menuList do
+        local value = menuList[index]
+        if (value.text) then
+            value.index = index;
+            UIDropDownMenu_AddButton( value, level );
+        end
+    end
+end
+
+local function EasyMenu(menuList, menuFrame, anchor, x, y, displayMode, autoHideDelay )
+    if ( displayMode == "MENU" ) then
+        menuFrame.displayMode = displayMode;
+    end
+    UIDropDownMenu_Initialize(menuFrame, EasyMenu_Initialize, displayMode, nil, menuList);
+    ToggleDropDownMenu(1, nil, menuFrame, anchor, x, y, menuList, nil, autoHideDelay);
+end
 
 local function classCheck()
     local class = select(2,UnitClass("player"))
@@ -96,7 +114,7 @@ function Whistle:UpdateLDB(pet_number)
     Whistle.db.char.pet_number = pet_number
     WhistleFrame:SetAttribute("type", "macro")
     WhistleFrame:SetAttribute("macrotext", "/cast [nopet] "..(L["Call Pet %d"]):format(pet_number))
-    SetPetSlot(pet_number,pet_number)
+    C_StableInfo.SetPetSlot(pet_number,pet_number)
 end
 
 local function Print(msg)
@@ -116,10 +134,10 @@ if WGLDB then
         menu = wipe(menu)
         for i = 1, 5 do
             if Whistle:CallPetSpellCheck(i) then
-                local icon, name = GetStablePetInfo(i)
-                if name and icon then
+                local petInfo = GetStablePetInfo(i)
+                if petInfo then
                     menu[#menu + 1] = {
-                        text = name,
+                        text = petInfo.name,
                         func = function()
                             if InCombatLockdown() then
                                 Print(L["Can't change pet in combat"])
@@ -130,7 +148,7 @@ if WGLDB then
                             --Whistle:KeyOnClick()
                             --WhistleFrame:GetScript("OnClick")("WhistleFrame", "LeftButton")
                         end,
-                        icon = icon or nil,
+                        icon = petInfo.icon or nil,
                     }
                 else
                     menu[#menu + 1] = {
