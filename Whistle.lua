@@ -105,16 +105,16 @@ function Whistle:CallPetSpellCheck(pet_number)
 end
 
 function Whistle:UpdateLDB(pet_number)
-    local icon, name = GetStablePetInfo(pet_number)
-    if icon and name then
-        WGLDB.icon, WGLDB.text = icon, name
+    local petInfo = GetStablePetInfo(pet_number)
+    if petInfo then
+        WGLDB.icon, WGLDB.text = petInfo.icon, petInfo.name
     else
         WGLDB.icon, WGLDB.text = defaultIcon,L["Pet Slot"].." "..pet_number
     end
     Whistle.db.char.pet_number = pet_number
     WhistleFrame:SetAttribute("type", "macro")
     WhistleFrame:SetAttribute("macrotext", "/cast [nopet] "..(L["Call Pet %d"]):format(pet_number))
-    C_StableInfo.SetPetSlot(pet_number, pet_number)
+    C_StableInfo.SetPetSlot(pet_number,pet_number)
 end
 
 local function Print(msg)
