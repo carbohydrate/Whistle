@@ -12,7 +12,7 @@ If the DataBroker display is installed will attach menu to minimap.
 - Bind the addon to a key in the default key bindings menu, then use your LDB display addon or the minimap icon to change pets.
 - Or you can use it in a macro for example:
 
-/click WhistleFrame LeftButton 1  
+/click [nopet] WhistleFrame LeftButton 1  
 /cast [@pet,dead][mod:alt] Revive Pet  
 /cast [pet,mod:ctrl] Mend Pet  
 /cast [pet,mod:shift] Dismiss Pet  
