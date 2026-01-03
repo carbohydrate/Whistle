@@ -1,208 +1,160 @@
 local Whistle = CreateFrame("Frame")
-_G.Whistle = Whistle
 
-BINDING_HEADER_WHISTLE = "Whistle"
-_G["BINDING_NAME_CLICK WhistleFrame:LeftButton"] = "Whistle Key"
+local WhistleSecureActionButton = CreateFrame("Button", "WhistleFrame", UIParent, "SecureActionButtonTemplate")
+WhistleSecureActionButton:RegisterForClicks("AnyUp", "AnyDown")
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Whistle")
-local ldb = LibStub:GetLibrary("LibDataBroker-1.1", true)
-local icon = LibStub("LibDBIcon-1.0", true)
+_G["BINDING_NAME_CLICK WhistleFrame:LeftButton"] = "Whistle"
+
+local LibDataBroker = LibStub("LibDataBroker-1.1")
+local LibDBIcon = LibStub("LibDBIcon-1.0")
+
 local defaultIcon = "Interface\\Icons\\Ability_Hunter_BeastTaming"
-local pName = UnitName("player")
-local GetStablePetInfo = C_StableInfo.GetStablePetInfo
 
-local call_pet = {
-    [1] = 883, -- Call Pet 1
-    [2] = 83242, -- Call Pet 2
-    [3] = 83243, -- Call Pet 3
-    [4] = 83244, -- Call Pet 4
-    [5] = 83245, -- Call Pet 5
+local dbDefaults = {
+    profile = {
+        minimap = {
+            hide = false,
+        },
+    },
+    char = {
+        petNumber = nil,
+    },
 }
 
-local function EasyMenu_Initialize( frame, level, menuList )
-    for index = 1, #menuList do
-        local value = menuList[index]
-        if (value.text) then
-            value.index = index;
-            UIDropDownMenu_AddButton( value, level );
+local petTable = {
+    883, -- Call Pet 1
+    83242, -- Call Pet 2
+    83243, -- Call Pet 3
+    83244, -- Call Pet 4
+    83245, -- Call Pet 5
+}
+
+local function openMenu()
+    local function isSelected(index)
+        return index == Whistle.db.char.petNumber
+    end
+
+    local function setSelected(index)
+        if InCombatLockdown() then
+            Whistle:Print("Can't change pet in combat")
+        else
+            Whistle:UpdateLDB(index)
         end
     end
-end
 
-local function EasyMenu(menuList, menuFrame, anchor, x, y, displayMode, autoHideDelay )
-    if ( displayMode == "MENU" ) then
-        menuFrame.displayMode = displayMode;
+    local function addRadioButton(rootDescription, text, icon, i)
+        local radio = rootDescription:CreateRadio(text, isSelected, setSelected, i)
+
+        radio:AddInitializer(function(button, description, menu)
+            local rightTexture = button:AttachTexture();
+            rightTexture:SetSize(20, 20);
+            rightTexture:SetPoint("RIGHT");
+            rightTexture:SetTexture(icon);
+
+            -- local fontString = button.fontString;
+            -- fontString:SetWidth(fontString:GetUnboundedStringWidth() + 10)
+        end)
     end
-    UIDropDownMenu_Initialize(menuFrame, EasyMenu_Initialize, displayMode, nil, menuList);
-    ToggleDropDownMenu(1, nil, menuFrame, anchor, x, y, menuList, nil, autoHideDelay);
+
+    MenuUtil.CreateContextMenu(UIParent, function(ownerRegion, rootDescription)
+        for i = 1, 5 do
+            -- unsure this is needed, not max level hunter?
+            local hasSpell = FindSpellBookSlotBySpellID(petTable[i]) and true or false
+
+            if hasSpell then
+                local petInfo = C_StableInfo.GetStablePetInfo(i)
+
+                if petInfo then
+                    addRadioButton(rootDescription, petInfo.name, petInfo.icon, i)
+                else
+                    addRadioButton(rootDescription, "Pet Slot "..i, defaultIcon, i)
+                end
+            end
+        end
+    end)
 end
 
-local function classCheck()
-    local class = select(2,UnitClass("player"))
-    if class == "HUNTER" then return true
-    else
-        Whistle:UnregisterEvent("ADDON_LOADED")
-        Whistle:UnregisterEvent("PLAYER_LOGIN")
-        Whistle:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        return false
-    end
-end
-
-local WGLDB = nil
-if ldb and classCheck() then
-    WGLDB = ldb:NewDataObject("Whistle", {
-        type = "data source",
-        text = "Whistle",
-        icon = defaultIcon,
-    })
-end
-
-Whistle:SetScript("OnEvent", function(self, event, ...)
+function Whistle:OnEvent(event, ...)
     self[event](self, ...)
-end)
-
-function Whistle:ADDON_LOADED(addon)
-    if addon:lower() ~= "whistle" then return end
-
-    classCheck()
-
-    self.db = LibStub("AceDB-3.0"):New("WhistleDB", {
-        profile = {
-            minimap = {
-                hide = false,
-            },
-        },
-        char = {
-            pet_number = nil,
-        },
-    }, true)
-
-    if icon and WGLDB then
-        icon:Register("Whistle", WGLDB, self.db.profile.minimap)
-    end
-
-    if IsLoggedIn() then self:PLAYER_LOGIN() end
 end
 
-function Whistle:PLAYER_LOGIN()
-    local pet_number = Whistle.db.char.pet_number
-    if pet_number then Whistle:UpdateLDB(pet_number) end
-end
+function Whistle:ADDON_LOADED(addOnName)
+    if addOnName == "Whistle" then
 
-function Whistle:COMBAT_LOG_EVENT_UNFILTERED(...)
-    local _,event,_,_,sourceName,_,_,_,destName,_,_,spellId = ...
-    if event == "SPELL_SUMMON" and sourceName == pName then
-        for i=1, 5 do
-            if call_pet[i] == spellId then
-               Whistle:UpdateLDB(i)
+        local function classCheck()
+            -- 1st var is localized
+            local _, classFilename = UnitClass("player")
+            if classFilename == "HUNTER" then
+                return true
+            else
+                Whistle:UnregisterEvent("ADDON_LOADED")
+                return false
+            end
+        end
+
+        if classCheck() then
+            -- init db
+            self.db = LibStub("AceDB-3.0"):New("WhistleDB", dbDefaults, true)
+
+            -- init LDB
+            self.whistleLDB = LibDataBroker:NewDataObject("Whistle", {
+                type = "data source",
+                text = "Whistle",
+                icon = defaultIcon,
+                OnClick = openMenu,
+                OnTooltipShow = function(tooltip) tooltip:AddLine("Whistle") end,
+            })
+
+            -- init icon
+            LibDBIcon:Register("Whistle", self.whistleLDB, self.db.profile.minimap)
+
+            if (self.db.char.petNumber) then
+                self:UpdateLDB(self.db.char.petNumber)
             end
         end
     end
 end
 
-function Whistle:CallPetSpellCheck(pet_number)
-    if FindSpellBookSlotBySpellID(call_pet[pet_number]) then return true end
-end
-
-function Whistle:UpdateLDB(pet_number)
-    local petInfo = GetStablePetInfo(pet_number)
+function Whistle:UpdateLDB(petNumber)
+    local petInfo = C_StableInfo.GetStablePetInfo(petNumber)
 
     if petInfo then
-        WGLDB.icon, WGLDB.text = petInfo.icon, petInfo.name
+        self.whistleLDB.icon = petInfo.icon
     else
-        WGLDB.icon, WGLDB.text = defaultIcon, L["Pet Slot"].." "..pet_number
+        self.whistleLDB.icon = defaultIcon
     end
 
-    Whistle.db.char.pet_number = pet_number
+    self.db.char.petNumber = petNumber
 
     -- this used to be "type", "macro", but after 11.0 can no longer /click a button that runs a macro
-    WhistleFrame:SetAttribute("type", "spell")
-    WhistleFrame:SetAttribute("spell", (L["Call Pet %d"]):format(pet_number))
+    WhistleSecureActionButton:SetAttribute("type", "spell")
+    WhistleSecureActionButton:SetAttribute("spell", petTable[petNumber])
 
-    C_StableInfo.SetPetSlot(pet_number, pet_number)
+    C_StableInfo.SetPetSlot(petNumber, petNumber)
 end
 
-local function Print(msg)
-    print("|c00FF0000Whistle|r: "..msg)
+function Whistle:Print(msg)
+    print("Whistle:", msg)
 end
 
-if WGLDB then
-    local popupFrame = CreateFrame("Frame", "WhistleMenu", UIParent, "UIDropDownMenuTemplate")
-    --https://wowpedia.fandom.com/wiki/UI_Object_UIDropDownMenu#The_info_table
-    local menu = {}
+SLASH_Whistle1 = "/whistle2"
 
-    local function menuSorter(a, b)
-        return a.text > b.text
-    end
-
-    local function updateMenu()
-        menu = wipe(menu)
-        for i = 1, 5 do
-            if Whistle:CallPetSpellCheck(i) then
-                local petInfo = GetStablePetInfo(i)
-                if petInfo then
-                    menu[#menu + 1] = {
-                        text = petInfo.name,
-                        func = function()
-                            if InCombatLockdown() then
-                                Print(L["Can't change pet in combat"])
-                            else
-                                Whistle:UpdateLDB(i)
-                            end
-                            --can't really use secure functions from here can we now...
-                            --Whistle:KeyOnClick()
-                            --WhistleFrame:GetScript("OnClick")("WhistleFrame", "LeftButton")
-                        end,
-                        icon = petInfo.icon or nil,
-                    }
-                else
-                    menu[#menu + 1] = {
-                        text = L["Pet Slot"].." "..i,
-                        func = function()
-                            if InCombatLockdown() then
-                                Print(L["Can't change pet in combat"])
-                            else
-                                Whistle:UpdateLDB(i)
-                            end
-                        end,
-                        icon = defaultIcon,
-                    }
-                end
-            end
-        end
-        --table.sort(menu, menuSorter)
-        menu[#menu + 1] = {
-            text = L["Show/Hide minimap"],
-            func = function()
-                if Whistle.db.profile.minimap.hide then
-                    icon:Show("Whistle")
-                    Whistle.db.profile.minimap.hide = false
-                else
-                    icon:Hide("Whistle")
-                    Whistle.db.profile.minimap.hide = true
-                end
-            end
-        }
-        --set selected pet
-        local pet_number = Whistle.db.char.pet_number
-        if pet_number then
-            menu[pet_number].checked = true
+SlashCmdList.Whistle = function(msg)
+    if msg == "minimap" then
+        if Whistle.db.profile.minimap.hide then
+            LibDBIcon:Show("Whistle")
+            Whistle.db.profile.minimap.hide = false
+        else
+            LibDBIcon:Hide("Whistle")
+            Whistle.db.profile.minimap.hide = true
         end
     end
 
-    function WGLDB.OnClick(self, button)
-        updateMenu()
-        EasyMenu(menu, popupFrame, self, 20, 4, "MENU")
-    end
-
-    function WGLDB.OnTooltipShow(tt)
-        tt:AddLine("Whistle")
+    if msg == "" then
+        Whistle:Print("/whistle2 minimap (toggle minimap icon)")
     end
 end
 
 Whistle:RegisterEvent("ADDON_LOADED")
-Whistle:RegisterEvent("PLAYER_LOGIN")
-Whistle:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
-local WhistleFrame = CreateFrame("Button", "WhistleFrame", UIParent, "SecureActionButtonTemplate")
-WhistleFrame:RegisterForClicks("AnyUp", "AnyDown")
+Whistle:SetScript("OnEvent", Whistle.OnEvent)
