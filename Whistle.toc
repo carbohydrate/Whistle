@@ -1,4 +1,4 @@
-## Interface: 110002
+## Interface: 110207
 ## Title: Whistle
 ## Notes: Hunter pet manager for any DataBroker(LDB) display.
 ## Author: Caleb, vitamin
@@ -6,22 +6,12 @@
 ## SavedVariables: WhistleDB
 ## IconTexture: 132161
 ## X-Curse-Project-ID: 706628
+## X-Wago-ID: b6XVXBGp
 
-#@no-lib-strip@
-Libs\LibStub\LibStub.lua
-Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
-Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
-Libs\AceLocale-3.0\AceLocale-3.0.xml
-Libs\AceDB-3.0\AceDB-3.0.xml
-Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
-#@end-no-lib-strip@
-
-locales\enUS.lua
-locales\frFR.lua
-locales\deDE.lua
-locales\zhCN.lua
-locales\zhTW.lua
-locales\ruRU.lua
-locales\esES.lua
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+libs\AceDB-3.0\AceDB-3.0.xml
 
 Whistle.lua
