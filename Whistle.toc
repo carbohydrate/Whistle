@@ -6,6 +6,7 @@
 ## SavedVariables: WhistleDB
 ## IconTexture: 132161
 ## X-Curse-Project-ID: 706628
+## X-Wago-ID: b6XVXBGp
 
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
