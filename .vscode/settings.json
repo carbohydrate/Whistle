@@ -1,13 +1,7 @@
 {
     "Lua.diagnostics.globals": [
-        "CreateFrame",
-        "UnitClass",
-        "LibStub",
-        "C_StableInfo",
+        "SlashCmdList",
         "UIParent",
-        "InCombatLockdown",
-        "MenuUtil",
-        "FindSpellBookSlotBySpellID",
-        "SlashCmdList"
+        "MenuUtil"
     ]
 }

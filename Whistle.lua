@@ -88,6 +88,7 @@ function Whistle:ADDON_LOADED(addOnName)
                 return true
             else
                 Whistle:UnregisterEvent("ADDON_LOADED")
+                Whistle:UnregisterEvent("PLAYER_LOGIN")
                 return false
             end
         end
@@ -107,11 +108,14 @@ function Whistle:ADDON_LOADED(addOnName)
 
             -- init icon
             LibDBIcon:Register("Whistle", self.whistleLDB, self.db.profile.minimap)
-
-            if (self.db.char.petNumber) then
-                self:UpdateLDB(self.db.char.petNumber)
-            end
         end
+    end
+end
+
+-- need to do this in PLAYER_LOGIN as C_StableInfo.GetStablePetInfo in Whistle:UpdateLDB is nil until this event
+function Whistle:PLAYER_LOGIN()
+    if (Whistle.db.char.petNumber) then
+        Whistle:UpdateLDB(Whistle.db.char.petNumber)
     end
 end
 
@@ -156,5 +160,6 @@ SlashCmdList.Whistle = function(msg)
 end
 
 Whistle:RegisterEvent("ADDON_LOADED")
+Whistle:RegisterEvent("PLAYER_LOGIN")
 
 Whistle:SetScript("OnEvent", Whistle.OnEvent)
